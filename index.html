@@ -647,19 +647,33 @@
 const buttons = document.querySelectorAll('.filters button');
 const rows = document.querySelectorAll('#comparisonTable tbody tr');
 const cards = document.querySelectorAll('.card');
-buttons.forEach(b => b.addEventListener('click', () => {
-  buttons.forEach(bb => bb.classList.remove('active'));
-  b.classList.add('active');
-  const f = b.dataset.filter;
+function applyFilters() {
+  const active = Array.from(buttons)
+    .filter(b => b.classList.contains('active') && b.dataset.filter !== 'all')
+    .map(b => b.dataset.filter);
+  const matchTags = (tags) => active.length === 0 || active.every(f => tags.includes(f));
   rows.forEach(r => {
-    const tags = r.dataset.tags || '';
-    r.style.display = (f === 'all' || tags.includes(f)) ? '' : 'none';
+    r.style.display = matchTags(r.dataset.tags || '') ? '' : 'none';
   });
   cards.forEach(c => {
-    const tags = c.dataset.tags || '';
-    c.style.display = (f === 'all' || tags.includes(f)) ? '' : 'none';
+    c.style.display = matchTags(c.dataset.tags || '') ? '' : 'none';
   });
+}
+buttons.forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.filter === 'all') {
+    // 'all' clears every filter
+    buttons.forEach(bb => bb.classList.remove('active'));
+    b.classList.add('active');
+  } else {
+    // Toggle this filter; ensure 'all' button is OFF when any filter is active
+    b.classList.toggle('active');
+    const allBtn = Array.from(buttons).find(bb => bb.dataset.filter === 'all');
+    const anyActive = Array.from(buttons).some(bb => bb.classList.contains('active') && bb.dataset.filter !== 'all');
+    if (allBtn) allBtn.classList.toggle('active', !anyActive);
+  }
+  applyFilters();
 }));
+applyFilters();
 </script>
 </body>
 </html>
